@@ -7,7 +7,7 @@ pipeline {
         CHART_PATH = "./backend-chart"
         NAMESPACE = "dev"
         AWS_REGION = "ap-south-1"
-        CLUSTER_NAME = "eks-cluster"   // 🔥 CHANGE THIS if your cluster name is different
+        CLUSTER_NAME = "eks-cluster"   // 🔥 change if different
     }
 
     stages {
@@ -23,7 +23,7 @@ pipeline {
                 sh '''
                 echo "Current directory:"
                 pwd
-                echo "Listing files:"
+                echo "Files:"
                 ls -l
                 '''
             }
@@ -31,22 +31,30 @@ pipeline {
 
         stage('Configure AWS & Kubeconfig') {
             steps {
-                sh '''
-                echo "Checking AWS CLI..."
-                aws --version
+                withCredentials([
+                    string(credentialsId: 'aws-access-key', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    sh '''
+                    echo "Setting AWS credentials..."
 
-                echo "Checking AWS Identity..."
-                aws sts get-caller-identity
+                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                    export AWS_DEFAULT_REGION=$AWS_REGION
 
-                echo "Listing EKS clusters..."
-                aws eks list-clusters --region $AWS_REGION
+                    echo "Checking AWS identity..."
+                    aws sts get-caller-identity
 
-                echo "Configuring kubeconfig..."
-                aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+                    echo "Listing clusters..."
+                    aws eks list-clusters --region $AWS_REGION
 
-                echo "Testing Kubernetes connection..."
-                kubectl get nodes
-                '''
+                    echo "Updating kubeconfig..."
+                    aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+
+                    echo "Checking Kubernetes connection..."
+                    kubectl get nodes
+                    '''
+                }
             }
         }
 
