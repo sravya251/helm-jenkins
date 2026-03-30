@@ -18,7 +18,7 @@ pipeline {
 
             steps {
 
-                git ''
+                git 'https://github.com/sravya251/helm-jenkins.git'
 
             }
 
