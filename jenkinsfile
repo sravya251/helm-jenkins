@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/sravya251/helm-jenkins-pipeline.git'
+                git 'https://github.com/sravya251/helm-jenkins.git'
             }
         }
  
